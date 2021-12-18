@@ -1,6 +1,6 @@
 <img width="1162" alt="transportr-ss" src="https://user-images.githubusercontent.com/62677644/146621596-6e5988bf-ac85-4e91-a807-31f0c1f10d37.png">
 
-# transporter
+# transportr
 
 Retro-themed command-line application providing basic transport controls for WAV files.
 
