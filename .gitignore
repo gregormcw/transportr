@@ -1,2 +1,6 @@
 .DS_Store
-./audio/.DS_Store
+audio/.DS_Store
+
+# Build output
+transportr
+transportr.dSYM/

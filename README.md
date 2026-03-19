@@ -2,29 +2,95 @@
 
 # transportr
 
-Retro-themed command-line application providing basic transport controls for WAV files.
+Retro-themed command-line audio player with transport controls for WAV files. Built with C++, PortAudio, libsndfile, and ncurses.
 
-## Run and Compile
+```
+        .------------------------.
+        |\////////         G.M.  |
+        | \/  __  ______  __     |
+        |    /  \|\.....|/  \    |
+        |    \__/|/_____|\_\/    |
+        |     = TRANSPORTR =     |
+        |    ________________    |
+        |___/_._o________o_._\___|
+```
 
-* Ensure `build.sh` is an executable:
+## Features
+
+- Load and switch between up to 8 WAV tracks at runtime
+- Transport controls: play/pause, stop, rewind, fast-forward, 1-second jump, and loop
+- Real-time position display (`MM:SS / MM:SS`)
+- Thread-safe track switching during playback via a lock-free atomic
+
+## Architecture
+
+transportr uses two concurrent threads:
+
+- **Main thread** — runs the ncurses event loop, reads keyboard input, and updates shared state.
+- **PortAudio callback thread** — a real-time audio thread invoked by PortAudio approximately every 23ms (1024 frames at 44.1 kHz). It reads shared state and writes audio samples to the output buffer.
+
+The critical design constraint is that the callback thread must be **non-blocking** — no mutexes, no memory allocation, no I/O. Track selection is therefore communicated via a single `atomic_int` in the shared `Buf` struct, which guarantees a consistent read across threads without a lock.
+
+All audio data is loaded into heap-allocated buffers (`float*`) before playback begins, so the callback only reads pre-loaded memory. Transport state flags (`playback`, `rew`, `fwd`, etc.) are plain booleans written by the main thread and read by the callback — safe in practice because each flag is a single word and the main thread only writes one at a time, though formally `atomic<bool>` would be more correct.
+
+## Dependencies
+
+Install via Homebrew on macOS:
+
+```bash
+brew install portaudio libsndfile ncurses
+```
+
+Or on Debian/Ubuntu:
+
+```bash
+sudo apt-get install libportaudio2 libportaudio-dev libsndfile1 libsndfile1-dev libncurses-dev
+```
+
+## Build and Run
+
+Make the build script executable (first time only):
+
 ```bash
 chmod +x build.sh
 ```
 
-* Compile all code:
+Compile:
+
 ```bash
 ./build.sh
 ```
 
-* Run transporter:
+Run:
+
 ```bash
-./transporter
+./transportr
 ```
 
-## Getting Started
-After running the program, the tracks in `./audio/` will be loaded into memory before reaching the main ncurses display.
+## Adding Your Own Audio
 
-Track 0 is the default initial selection, however the user can switch between tracks by pressing their respective key. Hitting spacebar will begin playback. The user may then follow the on-screen instructions regarding the other transport controls. It is worth noting that, though `<` and `>` are displayed for jump-back and jump-forward, respectively, these controls are technically `,` and `.`.
+1. Place WAV files in the `./audio/` directory.
+2. Add each file path (one per line) to `audioPaths.txt`.
 
-## Audio
-Two audio tracks are already in `./audio/` folder for ease of use. These may be replaced by the user, but it is important that all filepaths are included in the `audioPaths.txt` file. All audio files must have the same sample rate and be in WAV format.
+```
+./audio/track1.wav
+./audio/track2.wav
+```
+
+**Requirements:** all files must share the same sample rate and have at most 2 channels (stereo). A maximum of 8 tracks can be loaded at once.
+
+Two sample tracks are included in `./audio/` to get started.
+
+## Controls
+
+| Key     | Action                  |
+|---------|-------------------------|
+| `SPACE` | Play / Pause            |
+| `S`     | Stop (resets to start)  |
+| `A`     | Rewind (2× reverse)     |
+| `D`     | Fast-forward (2×)       |
+| `,`     | Jump back 1 second      |
+| `.`     | Jump forward 1 second   |
+| `L`     | Toggle loop             |
+| `0`–`7` | Select track            |
+| `Q`     | Quit                    |

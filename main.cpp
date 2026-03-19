@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+#include <filesystem>
 #include <unistd.h>     // sleep()
 #include <sndfile.h>	// libsndfile
 #include <portaudio.h>	// PortAudio
@@ -63,7 +64,7 @@ static int paCallback( const void *inputBuffer, void *outputBuffer,
 int main(int argc, char *argv[])
 {
   	char ifilename[MAX_FILES][MAX_PATH_LEN], ch;
-  	int i, selection;
+  	int i, selection = 0;
   	float count;
   	unsigned int numInputFiles;
   	FILE *fp;
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
 
 	// If fp points to null value, print error statement and return -1
 	if (!fp) {
-		std::cerr << "Cannot open " << argv[1] << std::endl;
+		std::cerr << "Cannot open audioPaths.txt" << std::endl;
 		return -1;
 	}
 
@@ -121,7 +122,9 @@ int main(int argc, char *argv[])
 		}
 
 		// char trackTitle[MAX_PATH_LEN];
-		strncpy(p->trackTitle[i], ifilename[i]+8, sizeof(ifilename[i]) - sizeof(".wav"));
+		std::string stem = std::filesystem::path(ifilename[i]).stem().string();
+		strncpy(p->trackTitle[i], stem.c_str(), MAX_PATH_LEN - 1);
+		p->trackTitle[i][MAX_PATH_LEN - 1] = '\0';
 		// p->trackTitle[i] = trackTitle;
 
 		// Otherwise, print header information for user
