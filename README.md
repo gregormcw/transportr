@@ -2,6 +2,10 @@
 
 # transportr
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![C++17](https://img.shields.io/badge/C++-17-blue.svg?logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey.svg)]()
+
 Retro-themed command-line audio player with transport controls for WAV files. Built with C++, PortAudio, libsndfile, and ncurses.
 
 ```
